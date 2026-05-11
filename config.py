@@ -12,7 +12,7 @@ class ConfigurationManager:
         # Training hyperparameters
         argument_parser.add_argument('--batchsize', type=int, default=64,
                                      help='Number of samples processed simultaneously')
-        argument_parser.add_argument('--choices', default=[1, 1, 1, 1, 1, 1, 1, 1],
+        argument_parser.add_argument('--choices', type=int, nargs='+', default=[1, 1, 1, 1, 1, 1, 1, 1],
                                      help='Dataset selection flags')
         argument_parser.add_argument('--epoch', type=int, default=30,
                                      help='Total training iterations')
