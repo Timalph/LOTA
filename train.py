@@ -1,6 +1,7 @@
 import os
 import torch
 import numpy
+import sys
 from datetime import datetime
 from PIL import ImageFile
 
@@ -13,6 +14,11 @@ from config import ConfigurationManager as Configurator
 from model import model as NeuralNetwork
 from util import bceLoss as compute_binary_loss
 
+print(sys.executable)
+print(torch.__version__)
+print(torch.cuda.is_available())
+print(torch.cuda.device_count())
+#sys.exit(0)
 
 def prepare_validation_config():
     """Create validation-specific configuration"""
