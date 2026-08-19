@@ -47,8 +47,10 @@ def apply_preprocessing(image, options):
 
 
 class GenerativeImageTrainingSet(Dataset):
+    ### het enige wat je hoeft aan te passen is de _load_images functie, die moet een lijst met image paths maken.
     def __init__(self, root_dir, dataset_name, options):
         super().__init__()
+        self.unbiased = False
         self.options = options
         self.base_path = os.path.join(root_dir, dataset_name, "train")
 
@@ -62,14 +64,26 @@ class GenerativeImageTrainingSet(Dataset):
         ])
 
     def _load_images(self, category):
+        #### based on a flag either load as is, or apply that preloading filtering function that we saw in the unbiased genimage github
         category_path = os.path.join(self.base_path, category)
         return [os.path.join(category_path, f) for f in os.listdir(category_path)]
 
-    def _load_rgb(self, img_path):
+    def _compress_img(image, qf):
+        outputIoStream = io.BytesIO()
+        image.save(outputIoStream, "JPEG", quality=qf, optimice=True)
+        outputIoStream.seek(0)
+        return Image.open(outputIoStream)
+
+
+    def _load_rgb(self, img_path, qf=96):
         try:
             with open(img_path, 'rb') as f:
                 img = Image.open(f)
-                return img.convert('RGB')
+                img.convert('RGB')
+                if self.unbiased: ### If the unbiased flag is on a qf needs to be passed to _load_rgb so we can compress the image to the right qf
+                    img = _compress_img(img, qf)
+
+                return img
         except Exception as e:
             print(f"Image Loading Error {img_path}: {str(e)}")
             return Image.new('RGB', (256, 256), (0, 0, 0))
