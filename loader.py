@@ -63,6 +63,9 @@ def retrieve_unbiased_dataset(dataset_name, mode):
                                 'GLIDE' : ('glide', 230, 280, 230, 280),
                                 'VQDM' : ('VQDM', 230, 280, 230, 280)}
     dataset_name_unb, lb_w, ub_w, lb_h, ub_h = dataset_translation_dict[dataset_name]
+    ## make sure the path from metadata csv adheres to the directory naming convention of LOTA
+    for key, values in dataset_translation_dict.items():
+        df['path'] = df['path'].str.replace('root/' + values[0], 'root/' + key, regex=False)
     df_unbiased_natural = df[ (df["generator"] == "nature") & (df["width"] >= lb_w) & (df["height"] >= lb_h) & (df["width"] <= ub_w) & (df["height"] <= ub_h) & (df["compression_rate"] == 96) & (df['mode'] == mode)]
     df_unbiased_ai = df[ (df["generator"] == dataset_name_unb) & (df['mode'] == mode)]
 

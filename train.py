@@ -208,7 +208,6 @@ def main_execution():
     train_loader = fetch_train_data(config)
     total_batches = len(train_loader)
     val_loader = fetch_val_data(val_config)
-
     # Configure GPU
     configure_gpu(config.gpu_id)
 
