@@ -1,9 +1,10 @@
 import os
+os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 import torch
 import numpy
-import sys
 from datetime import datetime
 from PIL import ImageFile
+import sys
 
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 
@@ -14,15 +15,15 @@ from config import ConfigurationManager as Configurator
 from model import model as NeuralNetwork
 from util import bceLoss as compute_binary_loss
 
-print(sys.executable)
-print(torch.__version__)
-print(torch.cuda.is_available())
-print(torch.cuda.device_count())
-#sys.exit(0)
+print("START")
+print("CUDA_VISIBLE_DEVICES:", os.environ.get("CUDA_VISIBLE_DEVICES"))
+print("CUDA available:", torch.cuda.is_available())
+print("CUDA count:", torch.cuda.device_count())
+print("CUDA version:", torch.version.cuda)
 
 def prepare_validation_config():
     """Create validation-specific configuration"""
-    val_cfg = Configurator().parse()
+    val_cfg = Configurator().parse(display_settings=False)
     val_cfg.isTrain = False
     val_cfg.isVal = True
 
@@ -44,6 +45,7 @@ def execute_training_iteration(
 
     try:
         for batch_idx, (inputs, targets) in enumerate(data_provider, start=1):
+
             optimizer.zero_grad()
 
             # Move data to GPU
@@ -198,6 +200,7 @@ def main_execution():
     # Load configurations
     global config
     config = Configurator().parse()
+
     val_config = prepare_validation_config()
 
     # Prepare data

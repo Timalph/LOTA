@@ -42,6 +42,9 @@ class ConfigurationManager:
                                      help='Identifier for GPU device')
         argument_parser.add_argument('--val_batchsize', type=int, default=64,
                                      help='Batch size for validation')
+        argument_parser.add_argument('--unbiased', action='store_true',
+                                    help='Run unbiased data pre-processing according to UnbiasedGenImage code')
+
         return argument_parser
 
     def collect_arguments(self):
@@ -80,6 +83,9 @@ class ConfigurationManager:
 
         if display_settings:
             self.display_configuration(config)
-
+        if config.unbiased:
+            config.qf = 96
+            if not 'unbiased' in config.save_path:
+                sys.exit('--savepath needs to include unbiased')
         self.config = config
         return self.config
