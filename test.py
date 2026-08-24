@@ -3,6 +3,7 @@ os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 import torch
 import datetime
 import numpy as np
+import pandas as pd
 
 # Import modules with alternative names
 from util import set_random_seed as seed_generator
@@ -28,11 +29,13 @@ def generate_validation_settings():
 def assess_model_performance(
         validation_datasets,
         neural_network,
-        results_directory
+        results_directory,
+        model_params_dir
 ):
     """Evaluate neural network performance across validation datasets"""
     neural_network.eval()
     aggregate_correct = aggregate_samples = 0
+    performance_records = []
 
     with torch.no_grad():
         for dataset in validation_datasets:
@@ -63,6 +66,14 @@ def assess_model_performance(
 
             ai_performance = ai_correct / ai_count
             print(f"(1) AI Classification Accuracy: {ai_performance:.4f}")
+            performance_records.append({
+                'model_params_dir': model_params_dir,
+                'subset': dataset_identifier,
+                'image_type': 'ai',
+                'num_correct': ai_correct,
+                'num_samples': ai_count,
+                'accuracy': ai_performance,
+            })
 
             # Analyze natural images
             for image_batch, target_labels in natural_data_loader:
@@ -80,6 +91,14 @@ def assess_model_performance(
 
             natural_performance = natural_correct / natural_count
             print(f"(2) Natural Image Accuracy: {natural_performance:.4f}")
+            performance_records.append({
+                'model_params_dir': model_params_dir,
+                'subset': dataset_identifier,
+                'image_type': 'natural',
+                'num_correct': natural_correct,
+                'num_samples': natural_count,
+                'accuracy': natural_performance,
+            })
 
             # Compute dataset-level performance
             dataset_performance = (ai_correct + natural_correct) / (ai_count + natural_count)
@@ -87,10 +106,33 @@ def assess_model_performance(
             aggregate_samples += ai_count + natural_count
 
             print(f"Subset Performance: {dataset_performance:.4f}")
+            performance_records.append({
+                'model_params_dir': model_params_dir,
+                'subset': dataset_identifier,
+                'image_type': 'both',
+                'num_correct': ai_correct + natural_correct,
+                'num_samples': ai_count + natural_count,
+                'accuracy': dataset_performance,
+            })
 
     # Compute overall performance
     overall_performance = aggregate_correct / aggregate_samples
     print(f"[Global Accuracy: {overall_performance:.4f}]")
+    performance_records.append({
+        'model_params_dir': model_params_dir,
+        'subset': 'overall',
+        'image_type': 'both',
+        'num_correct': aggregate_correct,
+        'num_samples': aggregate_samples,
+        'accuracy': overall_performance,
+    })
+
+    # Persist performance records to a CSV file, appending to any existing results
+    performance_df = pd.DataFrame(performance_records)
+    csv_path = os.path.join(results_directory, 'performance.csv')
+    file_exists = os.path.exists(csv_path)
+    performance_df.to_csv(csv_path, mode='a', header=not file_exists, index=False)
+    print(f"Appended performance results to {csv_path}")
 
 
 def configure_computation_device(device_id):
@@ -129,7 +171,7 @@ def execute_evaluation_procedure():
         os.makedirs(results_path)
 
     print("Commencing model evaluation")
-    assess_model_performance(validation_datasets, network_instance, results_path)
+    assess_model_performance(validation_datasets, network_instance, results_path, primary_config.load)
 
 
 if __name__ == '__main__':
