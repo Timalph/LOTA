@@ -166,9 +166,12 @@ def execute_evaluation_procedure():
     if primary_config.load is not None:
         train_config = toolkit.load_training_config(primary_config.load)
         if train_config is not None:
-            for key in ('bit_mode', 'patch_mode', 'patch_size', 'img_height'):
+            for key in ('bit_mode', 'patch_mode', 'patch_size', 'img_height', 'unbiased'):
                 setattr(primary_config, key, train_config[key])
                 setattr(validation_config, key, train_config[key])
+            if 'qf' in train_config:
+                setattr(primary_config, 'qf', train_config['qf'])
+                setattr(validation_config, 'qf', train_config['qf'])
             primary_config.save_path = train_config['save_path']
             print(f"Adopted preprocessing settings from config.json alongside {primary_config.load}")
         else:

@@ -113,13 +113,13 @@ class GenerativeImageTrainingSet(Dataset):
         return Image.open(outputIoStream)
 
 
-    def _load_rgb(self, img_path, label, qf=96):
+    def _load_rgb(self, img_path, label):
         try:
             with open(img_path, 'rb') as f:
                 img = Image.open(f).convert('RGB')
-                if self.options.unbiased: ### If the unbiased flag is on a qf needs to be passed to _load_rgb so we can compress the image to the right qf
+                if self.options.unbiased: ### If the unbiased flag is on, compress to the configured qf
                     if label:
-                        img = self._compress_img(img, qf)
+                        img = self._compress_img(img, self.options.qf)
                 return img
         except Exception as e:
             print(f"Image Loading Error {img_path}: {str(e)}")
@@ -165,13 +165,13 @@ class GenerativeImageValidationSet(Dataset):
         outputIoStream.seek(0)
         return Image.open(outputIoStream)
 
-    def _load_rgb(self, img_path, label, qf=96):
+    def _load_rgb(self, img_path, label):
         try:
             with open(img_path, 'rb') as f:
                 img = Image.open(f).convert('RGB')
                 if self.options.unbiased:
                     if label:
-                        img = self._compress_img(img, qf)
+                        img = self._compress_img(img, self.options.qf)
                 return img
         except Exception as e:
             print(f"Val Image Loading Error {img_path}: {str(e)}")
