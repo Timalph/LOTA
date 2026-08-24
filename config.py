@@ -37,7 +37,7 @@ class ConfigurationManager:
         argument_parser.add_argument('--patch_mode', type=str, default='max',
                                      choices=['max', 'min', 'random'],
                                      help='Patch selection strategy')
-        argument_parser.add_argument('--gpu_id', type=str, default='5',
+        argument_parser.add_argument('--gpu_id', type=str, default='0',
                                      help='Identifier for GPU device')
         argument_parser.add_argument('--val_batchsize', type=int, default=64,
                                      help='Batch size for validation')
