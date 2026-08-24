@@ -6,6 +6,7 @@ import numpy as np
 import pandas as pd
 
 # Import modules with alternative names
+import util as toolkit
 from util import set_random_seed as seed_generator
 from util import poly_lr as learning_rate_adjuster
 from loader import get_val_loader as acquire_validation_dataset
@@ -30,7 +31,8 @@ def assess_model_performance(
         validation_datasets,
         neural_network,
         results_directory,
-        model_params_dir
+        model_params_dir,
+        config
 ):
     """Evaluate neural network performance across validation datasets"""
     neural_network.eval()
@@ -129,6 +131,13 @@ def assess_model_performance(
 
     # Persist performance records to a CSV file, appending to any existing results
     performance_df = pd.DataFrame(performance_records)
+
+    # Tag results with the specs used to produce them (pulled from the loaded
+    # training config when available, otherwise from the CLI-provided config)
+    spec_fields = ('bit_mode', 'patch_mode', 'patch_size', 'img_height', 'unbiased', 'qf')
+    for field in spec_fields:
+        performance_df[field] = getattr(config, field, None)
+
     csv_path = os.path.join(results_directory, 'performance.csv')
     file_exists = os.path.exists(csv_path)
     performance_df.to_csv(csv_path, mode='a', header=not file_exists, index=False)
@@ -149,6 +158,21 @@ def execute_evaluation_procedure():
     # Load configuration settings
     primary_config = Configurator().parse()
     validation_config = generate_validation_settings()
+
+    # If evaluating a trained checkpoint, adopt the preprocessing settings (and
+    # results location) it was trained with, so test-time behavior can't drift
+    # from train-time behavior. Falls back to the CLI-provided settings if no
+    # config.json sits alongside the checkpoint.
+    if primary_config.load is not None:
+        train_config = toolkit.load_training_config(primary_config.load)
+        if train_config is not None:
+            for key in ('bit_mode', 'patch_mode', 'patch_size', 'img_height'):
+                setattr(primary_config, key, train_config[key])
+                setattr(validation_config, key, train_config[key])
+            primary_config.save_path = train_config['save_path']
+            print(f"Adopted preprocessing settings from config.json alongside {primary_config.load}")
+        else:
+            print(f"No config.json found alongside {primary_config.load}; using CLI-provided settings")
 
     # Prepare validation data
     print('Preparing validation datasets...')
@@ -171,7 +195,9 @@ def execute_evaluation_procedure():
         os.makedirs(results_path)
 
     print("Commencing model evaluation")
-    assess_model_performance(validation_datasets, network_instance, results_path, primary_config.load)
+    assess_model_performance(
+        validation_datasets, network_instance, results_path, primary_config.load, primary_config
+    )
 
 
 if __name__ == '__main__':

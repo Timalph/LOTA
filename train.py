@@ -225,6 +225,11 @@ def main_execution():
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
 
+    # Persist the run configuration alongside the checkpoints (e.g. Network_best.pth),
+    # so test.py can later recover the exact settings this model was trained with
+    config_path = toolkit.save_config(config, output_dir)
+    print(f"Saved config to {config_path}")
+
     # Initialize training state
     global iteration_counter, best_performing_epoch, highest_accuracy
     iteration_counter = 0

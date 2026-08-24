@@ -1,6 +1,8 @@
 import torch
 import numpy as np
 import random
+import os
+import json
 
 
 def poly_lr(optimizer, init_lr, curr_iter, max_iter, power=0.9):
@@ -42,3 +44,22 @@ def crossEntropyLoss():
     return nn.CrossEntropyLoss()
 def mseLoss():
     return nn.MSELoss()
+
+
+def save_config(config, directory):
+    """Persist the run configuration as JSON alongside model checkpoints,
+    so a checkpoint always carries the settings it was trained with."""
+    config_path = os.path.join(directory, 'config.json')
+    with open(config_path, 'w') as f:
+        json.dump(vars(config), f, indent=2)
+    return config_path
+
+
+def load_training_config(checkpoint_path):
+    """Load the config.json saved alongside a checkpoint (same directory
+    as checkpoint_path). Returns None if no config.json is found."""
+    config_path = os.path.join(os.path.dirname(checkpoint_path), 'config.json')
+    if not os.path.exists(config_path):
+        return None
+    with open(config_path, 'r') as f:
+        return json.load(f)
