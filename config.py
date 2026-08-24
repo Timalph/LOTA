@@ -2,6 +2,8 @@ import argparse
 import os
 import torch
 
+from loader import MODEL_NAME_MAP
+
 
 class ConfigurationManager:
     def __init__(self):
@@ -83,7 +85,14 @@ class ConfigurationManager:
 
         unbiased_suffix = '_unbiased' if config.unbiased else ''
         qf_subdir = f'qf{config.qf}/' if config.unbiased else ''
-        config.save_path = f'../weights{unbiased_suffix}/{config.bit_mode}/{config.patch_mode}/{qf_subdir}'
+
+        active_subsets = [MODEL_NAME_MAP[i] for i, flag in enumerate(config.choices) if flag]
+        subset_subdir = '+'.join(active_subsets) if active_subsets else 'none'
+
+        config.save_path = (
+            f'../weights{unbiased_suffix}/{subset_subdir}/'
+            f'{config.bit_mode}/{config.patch_mode}/{qf_subdir}'
+        )
 
         if display_settings:
             self.display_configuration(config)
