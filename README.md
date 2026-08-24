@@ -44,7 +44,6 @@ You can train the LOTA model on Stable_Diffusion_v1.5 of GenImage by running the
 ```
 python train.py --choice 0 0 0 0 1 0 0 0
                 --image_root 'Path/to/GenImage'
-                --save_path 'Path/to/saved_weights'
                 --bit_mode 'scaling'
                 --patch_size 32
                 --patch_mode 'random'

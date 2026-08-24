@@ -23,9 +23,6 @@ class ConfigurationManager:
         argument_parser.add_argument('--image_root', type=str,
                                      default='/home/hdd1/chengrenxi/GenImage',
                                      help='Root directory for image datasets')
-        argument_parser.add_argument('--save_path', type=str,
-                                     default='/home/hdd1/chengrenxi/sdv5_thresholding2/',
-                                     help='Directory for saving model outputs')
         argument_parser.add_argument('--isPatch', type=bool, default=True,
                                      help='Enable patch processing mode')
         argument_parser.add_argument('--img_height', type=int, default=256,
@@ -81,11 +78,14 @@ class ConfigurationManager:
         config.isTrain = True  # Training mode flag
         config.isVal = False  # Validation mode flag
 
-        if display_settings:
-            self.display_configuration(config)
         if config.unbiased:
             config.qf = 96
-            if not 'unbiased' in config.save_path:
-                sys.exit('--savepath needs to include unbiased')
+
+        unbiased_suffix = '_unbiased' if config.unbiased else ''
+        qf_subdir = f'qf{config.qf}/' if config.unbiased else ''
+        config.save_path = f'../weights{unbiased_suffix}/{config.bit_mode}/{config.patch_mode}/{qf_subdir}'
+
+        if display_settings:
+            self.display_configuration(config)
         self.config = config
         return self.config
