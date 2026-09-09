@@ -42,6 +42,7 @@ def execute_training_iteration(
     global iteration_counter
     epoch_iterations = 0
     total_loss = 0
+    batch_losses = []
 
     try:
         for batch_idx, (inputs, targets) in enumerate(data_provider, start=1):
@@ -67,6 +68,7 @@ def execute_training_iteration(
             iteration_counter += 1
             epoch_iterations += 1
             total_loss += batch_loss.item()
+            batch_losses.append(batch_loss.item())
 
             # Log progress
             if batch_idx % 500 == 0 or batch_idx == total_batches or batch_idx == 1:
@@ -92,6 +94,8 @@ def execute_training_iteration(
     except KeyboardInterrupt:
         print("Training interrupted: saving model and exiting")
 
+    return batch_losses
+
 
 def perform_validation(
         validation_sets,
@@ -104,6 +108,7 @@ def perform_validation(
     global best_performing_epoch, highest_accuracy
 
     total_correct = total_samples = 0
+    per_dataset_accuracy = {}
 
     with torch.no_grad():
         for dataset in validation_sets:
@@ -156,6 +161,7 @@ def perform_validation(
             dataset_accuracy = (correct_ai + correct_nature) / (ai_count + nature_count)
             total_correct += correct_ai + correct_nature
             total_samples += ai_count + nature_count
+            per_dataset_accuracy[name] = dataset_accuracy
 
             print(f"Epoch: {epoch_index}, Accuracy: {dataset_accuracy:.4f}")
 
@@ -184,6 +190,8 @@ def perform_validation(
         f"Peak Performance: Epoch {best_performing_epoch:03d} | "
         f"Highest Accuracy: {highest_accuracy:.2%}"
     )
+
+    return overall_accuracy, per_dataset_accuracy
 
 
 def configure_gpu(gpu_id):

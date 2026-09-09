@@ -43,6 +43,8 @@ class ConfigurationManager:
                                      help='Batch size for validation')
         argument_parser.add_argument('--unbiased', action='store_true',
                                     help='Run unbiased data pre-processing according to UnbiasedGenImage code')
+        argument_parser.add_argument('--load_from_disk', action='store_true',
+                                    help='(unwired) reserved flag, no behavior implemented yet')
 
         return argument_parser
 

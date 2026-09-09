@@ -24,7 +24,16 @@ def bit_patch(img, img_height, bit_mode, patch_size, patch_mode):
         blue_low3 = ((img_np[:, :, 2] & mask_low) * (255 // 7)).astype(np.uint8)
         combined_image = cv.merge((red_low3, green_low3, blue_low3))
     elif bit_mode == "thresholding":
-        combined_image=img_np  # To be modified
+        mask_low = 0x07
+        red_low3 = img_np[:, :, 0] & mask_low
+        green_low3 = img_np[:, :, 1] & mask_low
+        blue_low3 = img_np[:, :, 2] & mask_low
+
+        red_thresh = np.where(red_low3 > 0, 255, 0).astype(np.uint8)
+        green_thresh = np.where(green_low3 > 0, 255, 0).astype(np.uint8)
+        blue_thresh = np.where(blue_low3 > 0, 255, 0).astype(np.uint8)
+
+        combined_image = cv.merge((red_thresh, green_thresh, blue_thresh))
     else:
         raise ValueError(f"Unsupported bit_mode: {bit_mode}")
     h, w, _ = combined_image.shape
