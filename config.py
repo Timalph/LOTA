@@ -45,6 +45,7 @@ class ConfigurationManager:
                                     help='Run unbiased data pre-processing according to UnbiasedGenImage code')
         argument_parser.add_argument('--load_from_disk', action='store_true',
                                     help='(unwired) reserved flag, no behavior implemented yet')
+        argument_parser.add_argument('--interpolation', choices=['nearest', 'linear', 'cubic'], default='linear')
         argument_parser.add_argument('--seed', type=int, default=0,
                                      help='Random seed for torch/numpy/python, for reproducibility')
 
@@ -97,6 +98,8 @@ class ConfigurationManager:
             f'../weights{unbiased_suffix}/{subset_subdir}/'
             f'{config.bit_mode}/{config.patch_mode}/{qf_subdir}'
         )
+
+
 
         if display_settings:
             self.display_configuration(config)

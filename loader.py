@@ -28,7 +28,7 @@ def create_preprocessing_pipeline(options):
         transform_func = transforms.Lambda(
             lambda img: bit_patch_process(
                 img, options.img_height, options.bit_mode,
-                options.patch_size, options.patch_mode
+                options.patch_size, options.patch_mode, options.interpolation
             )
         )
     else:
