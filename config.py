@@ -44,9 +44,7 @@ class ConfigurationManager:
         argument_parser.add_argument('--unbiased', action='store_true',
                                     help='Run unbiased data pre-processing according to UnbiasedGenImage code')
         argument_parser.add_argument('--load_from_disk', action='store_true',
-                                    help='Cache the bit_patch output to disk under '
-                                         'patches/seed_<seed>/<bit_mode>/<patch_mode>/, '
-                                         'reloading it instead of recomputing on future runs')
+                                    help='(unwired) reserved flag, no behavior implemented yet')
         argument_parser.add_argument('--seed', type=int, default=0,
                                      help='Random seed for torch/numpy/python, for reproducibility')
 

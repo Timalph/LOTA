@@ -107,16 +107,11 @@ def main():
     target_epoch = pop_cli_value(sys.argv, "--target_epoch", default=1, cast=int)
     output_dir_override = pop_cli_value(sys.argv, "--output_dir", default=None, cast=str)
 
-    torch.set_num_threads(8)
+    torch.set_num_threads(2)
+    toolkit.set_random_seed()
 
     config = _train.Configurator().parse()
-    toolkit.set_random_seed(config.seed)
     val_config = _train.prepare_validation_config()
-
-    # Let the dataset know which epoch this is, so patch caching (--load_from_disk)
-    # keys on it instead of freezing every epoch onto the first sampled patch.
-    config.current_epoch = target_epoch
-    val_config.current_epoch = target_epoch
 
     train_loader = _train.fetch_train_data(config)
     val_loader = _train.fetch_val_data(val_config)
