@@ -4,12 +4,14 @@ Standalone timing script for the training data pipeline in loader.py.
 Loads `x` images the same way GenerativeImageTrainingSet does, but breaks
 each sample into its individual stages and times them separately:
 
-    1. disk read      -> open(path, 'rb') + PIL.Image.open().convert('RGB')
-                          (+ JPEG re-compression when --unbiased is set)
-    2. bit_patch step  -> bit_patch(...) (only when --isPatch, the default)
-                          or plain Resize otherwise
-    3. ToTensor
-    4. Normalize
+    1. disk read   -> open(path, 'rb') + PIL.Image.open().convert('RGB')
+                       (+ JPEG re-compression when --unbiased is set)
+    2. bit_patch   -> bit_patch(...): crop selection only, returns a
+                       patch_size x patch_size patch (only when --isPatch)
+    3. resize      -> cv2.resize up to img_height (bit_patch patch) or
+                       torchvision Resize (plain, non-patch mode)
+    4. ToTensor
+    5. Normalize
 
 It reuses the real dataset/option machinery from config.py and loader.py so
 the timings reflect exactly what happens during training.
@@ -22,6 +24,7 @@ import argparse
 import statistics
 from time import perf_counter
 
+import cv2
 import numpy as np
 from torchvision import transforms
 
@@ -74,16 +77,22 @@ def time_single_image(dataset, index, options):
     t1 = perf_counter()
 
     if options.isPatch:
-        processed = bit_patch_process(
+        # bit_patch returns the raw patch_size x patch_size crop; the resize up
+        # to img_height happens separately below, same as loader.py's patch_step
+        # (so this also times correctly against a --load_from_disk cache hit,
+        # where the resize still has to run on the cached patch).
+        patch = bit_patch_process(
             img, options.img_height, options.bit_mode,
             options.patch_size, options.patch_mode
         )
-        # bit_patch returns a numpy array; ToTensor needs that or a PIL image, both work
         t2 = perf_counter()
+        processed = cv2.resize(patch, (options.img_height, options.img_height))
+        t2b = perf_counter()
     else:
         resize = transforms.Resize((options.img_height, options.img_height))
         processed = resize(img)
         t2 = perf_counter()
+        t2b = t2
 
     tensor = transforms.ToTensor()(processed)
     t3 = perf_counter()
@@ -94,14 +103,16 @@ def time_single_image(dataset, index, options):
     )(tensor)
     t4 = perf_counter()
 
-    return {
-        'path': img_path,
-        'disk_load': t1 - t0,
-        'bit_patch' if options.isPatch else 'resize': t2 - t1,
-        'to_tensor': t3 - t2,
-        'normalize': t4 - t3,
-        'total': t4 - t0,
-    }
+    timings = {'path': img_path, 'disk_load': t1 - t0}
+    if options.isPatch:
+        timings['bit_patch'] = t2 - t1
+        timings['resize'] = t2b - t2
+    else:
+        timings['resize'] = t2 - t1
+    timings['to_tensor'] = t3 - t2b
+    timings['normalize'] = t4 - t3
+    timings['total'] = t4 - t0
+    return timings
 
 
 def print_report(timings, options):

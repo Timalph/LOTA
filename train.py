@@ -50,11 +50,6 @@ def execute_training_iteration(
             print('time to load batch', end - start)
             optimizer.zero_grad()
 
-            print('exiting 0')
-            print(batch_idx)
-            
-            if batch_idx == 5:
-                break
             # Move data to GPU
             inputs = inputs.cuda()
             targets = targets.cuda()
