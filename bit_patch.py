@@ -57,6 +57,5 @@ def bit_patch(img, img_height, bit_mode, patch_size, patch_mode):
     else:
         selected_patch = random.choice(patch_list)
 
-    # Return the raw patch_size x patch_size crop; resizing to img_height happens
-    # after this (in loader.py), so it also applies to patches reloaded from a cache.
-    return np.array(selected_patch)
+    patch_np = np.array(selected_patch)
+    return cv2.resize(patch_np, (img_height, img_height))

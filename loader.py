@@ -65,30 +65,26 @@ def create_preprocessing_pipeline(options, img_path=None):
     ## resizing happens in this function already
     if options.isPatch:
         def patch_step(img):
-            # bit_patch returns the raw patch_size x patch_size crop (uncached and
-            # cached alike), so the resize to img_height always happens here, after
-            # the patch is obtained -- whichever source it came from.
             if options.load_from_disk and img_path is not None:
                 cache_path = get_patch_cache_path(options, img_path)
                 if os.path.exists(cache_path):
-                    patch = np.array(Image.open(cache_path).convert('RGB'))
-                else:
-                    patch = bit_patch_process(
-                        img, options.img_height, options.bit_mode,
-                        options.patch_size, options.patch_mode
-                    )
-                    os.makedirs(os.path.dirname(cache_path), exist_ok=True)
-                    try:
-                        Image.fromarray(patch).save(cache_path)
-                    except Exception as e:
-                        print(f"Could not cache patch to {cache_path}: {str(e)}")
-            else:
+                    return np.array(Image.open(cache_path).convert('RGB'))
+
                 patch = bit_patch_process(
                     img, options.img_height, options.bit_mode,
                     options.patch_size, options.patch_mode
                 )
+                os.makedirs(os.path.dirname(cache_path), exist_ok=True)
+                try:
+                    Image.fromarray(patch).save(cache_path)
+                except Exception as e:
+                    print(f"Could not cache patch to {cache_path}: {str(e)}")
+                return patch
 
-            return cv2.resize(patch, (options.img_height, options.img_height))
+            return bit_patch_process(
+                img, options.img_height, options.bit_mode,
+                options.patch_size, options.patch_mode
+            )
 
         transform_func = transforms.Lambda(patch_step)
     else:
