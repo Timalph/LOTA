@@ -23,7 +23,7 @@ class ConfigurationManager:
         argument_parser.add_argument('--load', type=str, default=None,
                                      help='Path to pre-trained model weights')
         argument_parser.add_argument('--image_root', type=str,
-                                     default='/home/hdd1/chengrenxi/GenImage',
+                                     default='../GenImage_root',
                                      help='Root directory for image datasets')
         argument_parser.add_argument('--isPatch', type=bool, default=True,
                                      help='Enable patch processing mode')
@@ -45,6 +45,8 @@ class ConfigurationManager:
                                     help='Run unbiased data pre-processing according to UnbiasedGenImage code')
         argument_parser.add_argument('--load_from_disk', action='store_true',
                                     help='(unwired) reserved flag, no behavior implemented yet')
+        argument_parser.add_argument('--seed', type=int, default=0,
+                                     help='Random seed for torch/numpy/python, for reproducibility')
 
         return argument_parser
 
