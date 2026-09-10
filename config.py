@@ -96,7 +96,7 @@ class ConfigurationManager:
 
         config.save_path = (
             f'../weights{unbiased_suffix}/{subset_subdir}/'
-            f'{config.bit_mode}/{config.patch_mode}/{qf_subdir}'
+            f'{config.bit_mode}/{config.patch_mode}/{config.interpolation}/{qf_subdir}'
         )
 
 
