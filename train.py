@@ -5,7 +5,7 @@ import numpy
 from datetime import datetime
 from PIL import ImageFile
 import sys
-
+from time import time
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 
 # Import original modules with aliases
@@ -43,12 +43,18 @@ def execute_training_iteration(
     epoch_iterations = 0
     total_loss = 0
     batch_losses = []
-
+    start = time()
     try:
         for batch_idx, (inputs, targets) in enumerate(data_provider, start=1):
-
+            end = time()
+            print('time to load batch', end - start)
             optimizer.zero_grad()
 
+            print('exiting 0')
+            print(batch_idx)
+            
+            if batch_idx == 5:
+                break
             # Move data to GPU
             inputs = inputs.cuda()
             targets = targets.cuda()
@@ -136,7 +142,7 @@ def perform_validation(
                         ((probabilities < 0.5) & (targets == 0))
                 )
                 correct_ai += correct.sum().item()
-
+                break
             ai_accuracy = correct_ai / ai_count
             #print(f"AI Accuracy: {ai_accuracy:.4f}")
 
@@ -153,7 +159,7 @@ def perform_validation(
                         ((probabilities < 0.5) & (targets == 0))
                 )
                 correct_nature += correct.sum().item()
-
+                break
             nature_accuracy = correct_nature / nature_count
             #print(f"Nature Accuracy: {nature_accuracy:.4f}")
 
@@ -202,12 +208,12 @@ def configure_gpu(gpu_id):
 def main_execution():
     """Main training procedure"""
     # Initialize environment
-    torch.set_num_threads(2)
-    toolkit.set_random_seed()
+    torch.set_num_threads(8)
 
     # Load configurations
     global config
     config = Configurator().parse()
+    toolkit.set_random_seed(config.seed)
 
     val_config = prepare_validation_config()
 
@@ -250,6 +256,11 @@ def main_execution():
     for epoch in range(1, config.epoch + 1):
         # Adjust learning rate
         current_lr = toolkit.poly_lr(optimizer, config.lr, epoch, config.epoch)
+
+        # Let the dataset know which epoch this is, so patch caching (--load_from_disk)
+        # keys on it instead of freezing every epoch onto the first sampled patch.
+        config.current_epoch = epoch
+        val_config.current_epoch = epoch
 
         # Training iteration
         execute_training_iteration(

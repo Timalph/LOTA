@@ -1,7 +1,7 @@
 import torch
 from torch.utils.data import Dataset, DataLoader
 from torchvision import transforms
-import os
+import os, sys
 import io
 from PIL import Image
 import numpy as np
@@ -11,6 +11,7 @@ import random
 from pathlib import Path
 from typing import List, Tuple, Dict, Any, Union
 import pandas as pd
+from time import time
 
 MODEL_NAME_MAP = {
     0: 'BigGAN',
@@ -23,14 +24,69 @@ MODEL_NAME_MAP = {
     7: 'VQDM'
 }
 
-def create_preprocessing_pipeline(options):
+### add seed as a flag that is added to options
+### seed - epoch - max - min - random - thresh - scaling
+### image_seed_epoch_max_scaling.jpg
+
+def _relative_image_path(img_path, image_root):
+    ### Turn an absolute/relative image path into something safe to nest under the
+    ### patch cache dir, keeping it recognizable (dataset/train/category/filename).
+    try:
+        rel = os.path.relpath(img_path, start=image_root)
+        if not rel.startswith(os.pardir):
+            return rel
+    except ValueError:
+        pass  # e.g. paths on different drives on Windows, or --unbiased paths
+              # (they come from the metadata CSV and aren't under image_root)
+    _, tail = os.path.splitdrive(os.path.normpath(img_path))
+    # strip '..'/'.'/empty segments so they can't escape the cache dir or eat
+    # into the seed/bit_mode/patch_mode components when joined below
+    parts = [p for p in tail.split(os.sep) if p not in ('', os.curdir, os.pardir)]
+    return os.path.join(*parts) if parts else os.path.basename(img_path)
+
+
+def get_patch_cache_path(options, img_path):
+    ### patches/seed_{seed}/{bit_mode}/{patch_mode}/epoch_{current_epoch}/<relative path>.png
+    ### epoch is in there because bit_patch's crop is randomized -- caching without it
+    ### would freeze every epoch onto whichever patch got sampled first.
+    ### Always saved as PNG since bit_patch operates on low-order bits, which
+    ### JPEG recompression would destroy.
+    current_epoch = getattr(options, 'current_epoch', 0)
+    rel = _relative_image_path(img_path, options.image_root)
+    rel = os.path.splitext(rel)[0] + '.png'
+    return os.path.join(
+        'patches', f'seed_{options.seed}', options.bit_mode, options.patch_mode,
+        f'epoch_{current_epoch}', rel
+    )
+
+
+def create_preprocessing_pipeline(options, img_path=None):
+    ## try except
+    ## resizing happens in this function already
     if options.isPatch:
-        transform_func = transforms.Lambda(
-            lambda img: bit_patch_process(
+        def patch_step(img):
+            if options.load_from_disk and img_path is not None:
+                cache_path = get_patch_cache_path(options, img_path)
+                if os.path.exists(cache_path):
+                    return np.array(Image.open(cache_path).convert('RGB'))
+
+                patch = bit_patch_process(
+                    img, options.img_height, options.bit_mode,
+                    options.patch_size, options.patch_mode
+                )
+                os.makedirs(os.path.dirname(cache_path), exist_ok=True)
+                try:
+                    Image.fromarray(patch).save(cache_path)
+                except Exception as e:
+                    print(f"Could not cache patch to {cache_path}: {str(e)}")
+                return patch
+
+            return bit_patch_process(
                 img, options.img_height, options.bit_mode,
                 options.patch_size, options.patch_mode
             )
-        )
+
+        transform_func = transforms.Lambda(patch_step)
     else:
         transform_func = transforms.Resize((options.img_height, options.img_height))
 
@@ -44,8 +100,8 @@ def create_preprocessing_pipeline(options):
     ])
 
 
-def apply_preprocessing(image, options):
-    pipeline = create_preprocessing_pipeline(options)
+def apply_preprocessing(image, options, img_path=None):
+    pipeline = create_preprocessing_pipeline(options, img_path)
     return pipeline(image)
 
 
@@ -126,6 +182,7 @@ class GenerativeImageTrainingSet(Dataset):
             return Image.new('RGB', (256, 256), (0, 0, 0))
 
     def __getitem__(self, index):
+        start = time()
         try:
             label = self.labels[index]
             img = self._load_rgb(self.all_images[index], label)
@@ -136,7 +193,8 @@ class GenerativeImageTrainingSet(Dataset):
             img = self._load_rgb(self.all_images[prev_index], label)
             
 
-        processed_img = apply_preprocessing(img, self.options)
+        processed_img = apply_preprocessing(img, self.options, self.all_images[index])
+        #print('Time to process img:', time() - start, self.all_images[index], label)
         return processed_img, label
 
     def __len__(self):
@@ -181,7 +239,8 @@ class GenerativeImageValidationSet(Dataset):
         label = self.labels[index]
         img = self._load_rgb(self.image_paths[index], label)
 
-        processed_img = apply_preprocessing(img, self.options)
+        processed_img = apply_preprocessing(img, self.options, self.image_paths[index])
+
         return processed_img, label
 
     def __len__(self):
