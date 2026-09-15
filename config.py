@@ -48,6 +48,8 @@ class ConfigurationManager:
         argument_parser.add_argument('--interpolation', choices=['nearest', 'linear', 'cubic'], default='linear')
         argument_parser.add_argument('--seed', type=int, default=0,
                                      help='Random seed for torch/numpy/python, for reproducibility')
+        argument_parser.add_argument('--save_every_epoch', action='store_true',
+                                     help='Save a checkpoint every epoch instead of only the best-performing one')
 
         return argument_parser
 
