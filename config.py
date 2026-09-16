@@ -42,6 +42,8 @@ class ConfigurationManager:
                                      help='Identifier for GPU device')
         argument_parser.add_argument('--val_batchsize', type=int, default=64,
                                      help='Batch size for validation')
+        argument_parser.add_argument('--no_resize', action='store_true',
+                                     help='Skip resizing the selected patch back up to img_height')
         return argument_parser
 
     def collect_arguments(self):

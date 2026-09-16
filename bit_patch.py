@@ -14,7 +14,7 @@ def compute(patch):
     res = diff_horizontal + diff_vertical + diff_diagonal
     return res.sum()
 
-def bit_patch(img, img_height, bit_mode, patch_size, patch_mode):
+def bit_patch(img, img_height, bit_mode, patch_size, patch_mode, no_resize=False):
     img_np = np.array(img)
     #combined_image = None
     if bit_mode == "scaling":
@@ -49,4 +49,6 @@ def bit_patch(img, img_height, bit_mode, patch_size, patch_mode):
         selected_patch = random.choice(patch_list)
 
     patch_np = np.array(selected_patch)
+    if no_resize:
+        return patch_np
     return cv2.resize(patch_np, (img_height, img_height))

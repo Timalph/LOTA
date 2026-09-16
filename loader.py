@@ -25,7 +25,7 @@ def create_preprocessing_pipeline(options):
         transform_func = transforms.Lambda(
             lambda img: bit_patch_process(
                 img, options.img_height, options.bit_mode,
-                options.patch_size, options.patch_mode
+                options.patch_size, options.patch_mode, options.no_resize
             )
         )
     else:
@@ -72,6 +72,8 @@ class GenerativeImageTrainingSet(Dataset):
                 return img.convert('RGB')
         except Exception as e:
             print(f"Image Loading Error {img_path}: {str(e)}")
+            if self.options.no_resize:
+                return Image.new('RGB', (self.options.patch_size, self.options.patch_size), (0, 0, 0))
             return Image.new('RGB', (256, 256), (0, 0, 0))
 
     def __getitem__(self, index):
@@ -109,6 +111,8 @@ class GenerativeImageValidationSet(Dataset):
                 return img.convert('RGB')
         except Exception as e:
             print(f"Val Image Loading Error {img_path}: {str(e)}")
+            if self.options.no_resize:
+                return Image.new('RGB', (self.options.patch_size, self.options.patch_size), (0, 0, 0))
             return Image.new('RGB', (256, 256), (0, 0, 0))
 
     def __getitem__(self, index):
