@@ -15,7 +15,7 @@ from model import model as DeepLearningModel
 from time import time
 # Configure image loading behavior
 from PIL import ImageFile
-
+from train import experiment_overview
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 
 
@@ -203,6 +203,6 @@ def execute_evaluation_procedure():
         validation_datasets, network_instance, results_path, primary_config.load, primary_config
     )
     print('Testing took:', time()-start)
-
+    experiment_overview(primary.config, primary_config.load)
 if __name__ == '__main__':
     execute_evaluation_procedure()
