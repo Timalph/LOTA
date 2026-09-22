@@ -47,6 +47,7 @@ def experiment_overview(config, best_model_path):
         'interpolation': config.interpolation,
         'patch_mode': config.patch_mode,
         'best_epoch_location': best_model_path,
+        'unbiased': config.unbiased
     }
     overview_df = pd.concat([overview_df, pd.DataFrame([new_row])], ignore_index=True)
 
@@ -177,7 +178,6 @@ def perform_validation(
                         ((probabilities > 0.5) & (targets == 1)) |
                         ((probabilities < 0.5) & (targets == 0))
                 )
-                correct_nature += correct.sum().item()
 
             nature_accuracy = correct_nature / nature_count
             #print(f"Nature Accuracy: {nature_accuracy:.4f}")
