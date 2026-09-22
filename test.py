@@ -12,7 +12,7 @@ from util import poly_lr as learning_rate_adjuster
 from loader import get_val_loader as acquire_validation_dataset
 from config import ConfigurationManager as Configurator
 from model import model as DeepLearningModel
-
+from time import time
 # Configure image loading behavior
 from PIL import ImageFile
 
@@ -198,10 +198,11 @@ def execute_evaluation_procedure():
         os.makedirs(results_path)
 
     print("Commencing model evaluation")
+    start = time()
     assess_model_performance(
         validation_datasets, network_instance, results_path, primary_config.load, primary_config
     )
-
+    print('Testing took:' time()-start)
 
 if __name__ == '__main__':
     execute_evaluation_procedure()
