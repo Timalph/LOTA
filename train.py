@@ -169,24 +169,24 @@ def perform_validation(
     overall_accuracy = total_correct / total_samples
 
     # Save best model
-    if config.save_every_epoch:
-        epoch_model_path = os.path.join(storage_location, f'Epoch_{epoch_index}.pth')
-        torch.save(network.state_dict(), epoch_model_path)
-        print(f"Saved model for Epoch: {epoch_index}")
+
+    if epoch_index == 1:
+        best_performing_epoch = 1
+        highest_accuracy = overall_accuracy
+        best_model_path = os.path.join(storage_location, 'Network_best.pth')
+        torch.save(network.state_dict(), best_model_path)
+        print(f"Saved best model on Epoch: {epoch_index}")
     else:
-        if epoch_index == 1:
-            best_performing_epoch = 1
+        if overall_accuracy > highest_accuracy:
+            best_performing_epoch = epoch_index
             highest_accuracy = overall_accuracy
             best_model_path = os.path.join(storage_location, 'Network_best.pth')
             torch.save(network.state_dict(), best_model_path)
             print(f"Saved best model on Epoch: {epoch_index}")
-        else:
-            if overall_accuracy > highest_accuracy:
-                best_performing_epoch = epoch_index
-                highest_accuracy = overall_accuracy
-                best_model_path = os.path.join(storage_location, 'Network_best.pth')
-                torch.save(network.state_dict(), best_model_path)
-                print(f"Saved best model on Epoch: {epoch_index}")
+    if config.save_every_epoch:
+        epoch_model_path = os.path.join(storage_location, f'Epoch_{epoch_index}.pth')
+        torch.save(network.state_dict(), epoch_model_path)
+        print(f"Saved model for Epoch: {epoch_index}")
 
     print(
         f"🏆 Performance Report | "
