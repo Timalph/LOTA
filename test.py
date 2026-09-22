@@ -203,6 +203,6 @@ def execute_evaluation_procedure():
         validation_datasets, network_instance, results_path, primary_config.load, primary_config
     )
     print('Testing took:', time()-start)
-    experiment_overview(primary.config, primary_config.load)
+    experiment_overview(primary_config, primary_config.load)
 if __name__ == '__main__':
     execute_evaluation_procedure()
