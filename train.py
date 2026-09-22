@@ -2,6 +2,7 @@ import os
 os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 import torch
 import numpy
+import pandas as pd
 from datetime import datetime
 from PIL import ImageFile
 import sys
@@ -28,6 +29,31 @@ def prepare_validation_config():
     val_cfg.isVal = True
 
     return val_cfg
+
+
+def experiment_overview(config, best_model_path):
+    """Append a row summarizing this run's config to results/experiment_overview.csv"""
+    overview_dir = 'results'
+    overview_path = os.path.join(overview_dir, 'experiment_overview.csv')
+
+    try:
+        overview_df = pd.read_csv(overview_path)
+    except (FileNotFoundError, pd.errors.EmptyDataError):
+        overview_df = pd.DataFrame(
+            columns=['bit_mode', 'interpolation', 'patch_mode', 'best_epoch_location']
+        )
+
+    new_row = {
+        'bit_mode': config.bit_mode,
+        'interpolation': config.interpolation,
+        'patch_mode': config.patch_mode,
+        'best_epoch_location': best_model_path,
+    }
+    overview_df = pd.concat([overview_df, pd.DataFrame([new_row])], ignore_index=True)
+
+    os.makedirs(overview_dir, exist_ok=True)
+    overview_df.to_csv(overview_path, index=False)
+    print(f"Logged run to {overview_path}")
 
 
 def execute_training_iteration(
@@ -265,6 +291,9 @@ def main_execution():
         perform_validation(
             val_loader, model, epoch, output_dir
         )
+
+    best_model_path = os.path.join(output_dir, 'Network_best.pth')
+    experiment_overview(config, best_model_path)
 
 
 if __name__ == '__main__':
