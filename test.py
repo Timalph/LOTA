@@ -202,7 +202,7 @@ def execute_evaluation_procedure():
     assess_model_performance(
         validation_datasets, network_instance, results_path, primary_config.load, primary_config
     )
-    print('Testing took:' time()-start)
+    print('Testing took:', time()-start)
 
 if __name__ == '__main__':
     execute_evaluation_procedure()
