@@ -61,7 +61,7 @@ def execute_training_iteration(
             total_loss += batch_loss.item()
 
             # Log progress
-            if batch_idx % 500 == 0 or batch_idx == total_batches or batch_idx == 1:
+            if batch_idx % 10 == 0 or batch_idx == total_batches or batch_idx == 1:
                 current_time = datetime.now().strftime("%Y%m%d-%H%M%S")
                 progress_percent = (batch_idx / total_batches) * 100
 
