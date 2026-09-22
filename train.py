@@ -39,11 +39,10 @@ def experiment_overview(config, best_model_path):
     try:
         overview_df = pd.read_csv(overview_path)
     except (FileNotFoundError, pd.errors.EmptyDataError):
-        overview_df = pd.DataFrame(
-            columns=['bit_mode', 'interpolation', 'patch_mode', 'best_epoch_location']
-        )
+        overview_df = pd.DataFrame(columns=['subsets','bit_mode', 'interpolation', 'patch_mode', 'best_epoch_location'])
 
     new_row = {
+        'subsets': config.subsets,
         'bit_mode': config.bit_mode,
         'interpolation': config.interpolation,
         'patch_mode': config.patch_mode,

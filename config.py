@@ -101,6 +101,7 @@ class ConfigurationManager:
             f'{config.bit_mode}/{config.patch_mode}/{config.interpolation}/{qf_subdir}'
         )
 
+        config.subsets = subset_subdir
 
 
         if display_settings:
